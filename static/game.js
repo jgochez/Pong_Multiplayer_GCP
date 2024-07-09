@@ -79,7 +79,13 @@ function create() {
     restartKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
 
     // Socket.io client
-    socket = io();
+    socket = io(); 
+    
+    // Listener
+    // socket.on( <str: identifier> , (arg) => {} );
+
+    // Emitter
+    // socket.emit( <str: identifier> , arg );
 
     // Listen to restart game
     socket.on('restart_game_request', (data) =>{
