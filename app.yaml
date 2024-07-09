@@ -1,0 +1,21 @@
+runtime: python39  # Use Python 3.9 runtime
+
+# The entry point to the application
+entrypoint: gunicorn -k eventlet -w 1 -b :$PORT app:app
+
+# Depending on resource demand use instead of F1 (DEFAULT)
+instance_class: F2
+
+# Environment variables 
+env_variables:
+  PYTHONUNBUFFERED: 'true'
+
+# Handlers for routing URLs
+handlers:
+  # Serve static files from the "static" directory
+  - url: /static
+    static_dir: static
+
+  # Serve dynamic content using the default handler script
+  - url: /.*
+    script: auto
