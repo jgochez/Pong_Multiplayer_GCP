@@ -44,7 +44,7 @@ def handle_connect():
         disconnect()
     else:
         connected_players.append(request.sid)
-    print('New client connected')
+        print('New client connected')
     # Emit initial state to the new client
     emit('update_score', {'left': left_score, 'right': right_score})
     emit('reset_ball', ball_state)
