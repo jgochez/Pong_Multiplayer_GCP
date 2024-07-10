@@ -26,8 +26,10 @@ let leftWall, rightWall;
 let leftScoreText, rightScoreText;
 let socket;
 let restartKey;
+let serverPaddlePositions = { left: 300, right: 300 };
+let lastUpdateTime = 0;
 
-function preload() {
+function preload() {      
     // Load assets if any
 }
 
@@ -100,10 +102,11 @@ function create() {
     // Listen for position updates
     socket.on('update_position', (data) => {
         if (data.paddle === 'left') {
-            leftPaddle.y = data.position;
+            serverPaddlePositions.left = data.position;
         } else if (data.paddle === 'right') {
-            rightPaddle.y = data.position;
+            serverPaddlePositions.right = data.position;
         }
+        lastUpdateTime = Date.now();
     });
 
     // Listen for score updates
@@ -128,28 +131,38 @@ function create() {
 function update() {
     handlePlayerInput();
     enforcePaddleBounds();
+    interpolatePaddles();
 }
 
 // Control paddle movement
 function handlePlayerInput() {
     let velocity = 10;
-    let offset = 35;
     if (cursors.up.isDown) {
         leftPaddle.y -= velocity;
-        socket.emit('player_move', { paddle: 'left', position: leftPaddle.y - offset });
+        socket.emit('player_move', { paddle: 'left', position: leftPaddle.y });
     }
     if (cursors.down.isDown) {
         leftPaddle.y += velocity ;
-        socket.emit('player_move', { paddle: 'left', position: leftPaddle.y + offset });
+        socket.emit('player_move', { paddle: 'left', position: leftPaddle.y });
     }
     if (cursors.left.isDown) {
         rightPaddle.y -= velocity;
-        socket.emit('player_move', { paddle: 'right', position: rightPaddle.y - offset });
+        socket.emit('player_move', { paddle: 'right', position: rightPaddle.y });
     }
     if (cursors.right.isDown) {
         rightPaddle.y += velocity;
-        socket.emit('player_move', { paddle: 'right', position: rightPaddle.y + offset });
+        socket.emit('player_move', { paddle: 'right', position: rightPaddle.y });
     }
+}
+
+// Interpolate paddles for handling lag
+function interpolatePaddles() {
+    let now = Date.now();
+    let delta = now - lastUpdateTime;
+    let interpolationFactor = Math.min(delta / 50, 1); // 20 tps
+
+    leftPaddle.y += (serverPaddlePositions.left - leftPaddle.y) * interpolationFactor;
+    rightPaddle.y += (serverPaddlePositions.right - rightPaddle.y) * interpolationFactor;
 }
 
 // Keep paddles from flying out of screen

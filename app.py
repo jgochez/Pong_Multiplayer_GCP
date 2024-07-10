@@ -1,8 +1,8 @@
 import eventlet
 eventlet.monkey_patch()
 
-from flask import Flask, render_template
-from flask_socketio import SocketIO, emit
+from flask import Flask, render_template, request
+from flask_socketio import SocketIO, emit, disconnect
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
@@ -30,13 +30,22 @@ initial_paddles_position = {
 # Store the current position of the ball
 ball_state = initial_ball_state.copy()
 
+# Track connected players
+connected_players = []
+
 @app.route('/')
 def index():
     return render_template('index.html')
 
 @socketio.on('connect')
 def handle_connect():
+    global connected_players
+    if len(connected_players) >= 2:
+        disconnect()
+    else:
+        connected_players.append(request.sid)
     print('New client connected')
+    # Emit initial state to the new client
     emit('update_score', {'left': left_score, 'right': right_score})
     emit('reset_ball', ball_state)
 
@@ -80,7 +89,14 @@ def handle_reset_ball_request():
 
 @socketio.on('disconnect')
 def handle_disconnect():
+    global connected_players
     print('Client disconnected')
+    new_connected_players = []
+    for sid in connected_players:
+        if sid != request.sid:
+            new_connected_players.append(sid)
+    connected_players = new_connected_players
+
 
 if __name__ == '__main__':
     socketio.run(app, host='0.0.0.0', port=5151)
