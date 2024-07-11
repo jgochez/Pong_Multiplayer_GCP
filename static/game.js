@@ -106,7 +106,7 @@ function create() {
         } else if (data.paddle === 'right') {
             serverPaddlePositions.right = data.position;
         }
-        lastUpdateTime = Date.now();
+        lastUpdateTime = performance.now();
     });
 
     // Listen for score updates
@@ -126,6 +126,7 @@ function create() {
         restartGame();
     }, this);
 }
+
 
 // Phaser lifecycle @ 60 fps
 function update() {
@@ -155,14 +156,14 @@ function handlePlayerInput() {
     }
 }
 
-// Interpolate paddles for handling lag
+// Linear Interpolation for Paddle Movement
 function interpolatePaddles() {
-    let now = Date.now();
+    let now = performance.now();
     let delta = now - lastUpdateTime;
-    let interpolationFactor = Math.min(delta / 50, 1); // 20 tps
+    let interpolationFactor = Math.min(delta/5000, 1); 
 
-    leftPaddle.y += (serverPaddlePositions.left - leftPaddle.y) * interpolationFactor;
-    rightPaddle.y += (serverPaddlePositions.right - rightPaddle.y) * interpolationFactor;
+    leftPaddle.y = leftPaddle.y + (serverPaddlePositions.left - leftPaddle.y) * interpolationFactor;
+    rightPaddle.y = rightPaddle.y + (serverPaddlePositions.right - rightPaddle.y) * interpolationFactor;
 }
 
 // Keep paddles from flying out of screen

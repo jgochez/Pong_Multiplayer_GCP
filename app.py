@@ -40,9 +40,11 @@ def index():
 @socketio.on('connect')
 def handle_connect():
     global connected_players
+    # Check if lobby has 2 players or more
     if len(connected_players) >= 2:
         disconnect()
     else:
+        # If lobby not full add player
         connected_players.append(request.sid)
         print('New client connected')
     # Emit initial state to the new client
@@ -92,10 +94,8 @@ def handle_disconnect():
     global connected_players
     print('Client disconnected')
     new_connected_players = []
-    for sid in connected_players:
-        if sid != request.sid:
-            new_connected_players.append(sid)
-    connected_players = new_connected_players
+    # Check if current sid still live
+    connected_players.remove(request.sid)
 
 
 if __name__ == '__main__':
